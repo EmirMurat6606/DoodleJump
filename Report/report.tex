@@ -1,0 +1,146 @@
+\documentclass{article}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{xcolor}
+
+\title{Doodle Jump: Design and Implementation}
+\author{Emir Murat (20231527)}
+\date{January 2025}
+
+\begin{document}
+
+\maketitle
+
+\section*{Introduction}
+This report details the design and implementation of the \textit{Doodle Jump} game using C++ and the SFML graphics library. Developed as part of the Advanced Programming course, this project demonstrates the application of object-oriented principles and design patterns. Screenshots are included to clarify specific concepts.
+
+\section*{Game Features}
+The game simulates a dynamic world where the player (the doodler) ascends by jumping on platforms while navigating obstacles and collecting bonuses.
+
+\subsection*{Platform Types}
+Platforms are randomly generated and categorized as follows:
+\begin{itemize}
+    \item \textbf{Static platforms} (green): Stationary platforms.
+    \item \textbf{Horizontally moving platforms} (blue): Move side-to-side.
+    \item \textbf{Vertically moving platforms} (yellow): Move up and down.
+    \item \textbf{Temporary platforms} (white): Break after one use.
+\end{itemize}
+If a platform is jumped on twice or more, a penalty decreases the score. This penalty is by default -5, but can be specified per platform.
+
+\subsection*{Stages and Platform Distribution}
+The game progresses through four stages, with platform distribution adapting to player height:
+\begin{itemize}
+    \item \textbf{Stage 1} ($height < 500$): 100\% static platforms.
+    \item \textbf{Stage 2} ($500 \leq height < 1500$): 80\% static, 20\% horizontal platforms.
+    \item \textbf{Stage 3} ($1500 \leq height < 4000$): 55\% static, 30\% horizontal, 15\% vertical platforms.
+    \item \textbf{Stage 4} ($4000 \leq height < 7000$): All platform types with dynamic weights.
+\end{itemize}
+
+\subsection*{Bonuses and Obstacles}
+\begin{itemize}
+    \item \textbf{Bonuses:}
+    \begin{itemize}
+        \item \textbf{Spring}: Increases jump height by a factor of 5.
+        \item \textbf{Jetpack}: Propels the player upward for 3 seconds.
+    \end{itemize}
+    \item \textbf{Obstacles:}
+    \begin{itemize}
+        \item \textbf{Black Hole(\textcolor{green}{Extra})}: Applies lateral forces, complicating horizontal movement. The black hole has its effect at the moment it is in view, and will apply a force for 2.0 seconds by default. The duration can be customized via the Configs/GameConfig.h file. Black Holes occur when the height is 4000 or higher.
+    \end{itemize}
+\end{itemize}
+
+\section*{Overall Structure}
+
+\subsection*{Smart Pointers}
+Throughout the project, only smart pointers (shared ptr and unique ptr) are used, ensuring memory safety and preventing memory leaks. A memory check with \texttt{Valgrind} confirmed that no memory leaks were detected. 
+
+\subsection*{Templates}
+For the \texttt{Subject} and \texttt{Observer} classes, I implemented template classes to enhance flexibility and reduce redundancy. This approach allows the creation of an observable \texttt{Subject} (e.g., \texttt{Score}, \texttt{Entity}, etc.) without requiring separate \texttt{notify(Sub-Subject*)} functions for each type. Instead of creating distinct classes like \texttt{EntityObserver} or \texttt{ScoreObserver}, I leveraged templates to declare the observable type directly by inheriting as \texttt{class Name : [access specifier] Observer<ObservedSubject>}. This significantly reduces the number of additional classes needed, streamlining the implementation while maintaining type safety.
+
+\subsection*{Namespaces}
+The game logic is organized into seven namespaces for clarity and modularity:
+\begin{enumerate}
+    \item \texttt{gameModel}: Core logic objects (e.g., \texttt{Entities}, \texttt{Score}, \texttt{Camera}).
+    \item \texttt{gameControl}: Logic controllers and entity creation (\texttt{World}, generators).
+    \item \texttt{gameView}: SFML sprites and views (\texttt{EntityViews}, \texttt{ScoreView}).
+    \item \texttt{configs}: Global configurations (e.g., FPS, resolution, stage thresholds).
+    \item \texttt{exceptions}: Exception handling for issues like file or texture loading.
+    \item \texttt{assetManager}: Centralized asset storage (\texttt{FontManager}, \texttt{TextureManager}).
+    \item \texttt{events}: Input conversion for game logic (\texttt{EventHandler}).
+\end{enumerate}
+
+\section*{Design Principles}
+The project adheres to key object-oriented principles:
+\begin{itemize}
+    \item \textbf{Single Responsibility Principle:} Each class has a specific role (e.g., \texttt{TextureManager} handles and stores textures, \texttt{EventHandler} manages inputs, \texttt{EntityView} and its derived classes only store the Sprites and get updated, ...).
+    \item \textbf{Open/Closed Principle:} Components can be extended without modifying existing code, e.g., new entities derived from \texttt{Entity} or new events can be introduced by deriving new classes from the \texttt{Event} class. This makes it easier to add new functionality triggered by a user event (for example a shooting event).
+    \item \textbf{High Cohesion/Low Coupling:} The elements and functionalities within the classes are highly dependent on each other, which aligns with the Single Responsibility Principle. However, the use of Singleton classes such as Random and Stopwatch slightly violates Low Coupling, as they introduce some shared dependencies. Despite this, the overall functionality of the classes remains largely independent from one another.
+
+\end{itemize}
+\newpage
+\section*{Design Patterns}
+The following design patterns were implemented in the game:
+
+\subsection*{Model-View-Controller (MVC)}
+Game logic is encapsulated in a static library (\texttt{doodle\_jump}) without SFML dependencies. Input from the user is processed by the \texttt{EventHandler} and passed to the \texttt{World} (game control), which updates logical entities (\texttt{gameModel}) and notifies corresponding views (\texttt{gameView}) to render updates.
+
+\subsection*{Abstract Factory}
+The abstract class \texttt{AEntityFactory} which is shared between the \texttt{World} and \texttt{Generators}, provides an interface for creating game entities. The concrete factory \texttt{CEntityFactory} generates both logic and view objects and attaches them using the observer pattern.
+
+\subsection*{Observer Pattern}
+View objects act as observers of logical entities. If the internal state of the logical entities is changed, the observers in the \texttt{Subject} which represents the observable logic elements, notifies the appropriate "Views". This provides a structure to easily add new visual elements or audios. 
+
+\subsection*{Singleton}
+Classes like \texttt{Random}, \texttt{Stopwatch}, \texttt{FontManager}, and \texttt{TextureManager} are implemented as singletons to ensure a single instance throughout the game. This is useful for providing a central access point for all fonts, sprites and ensuring one (synchronized) chronometer is present in the game. 
+
+\subsection*{State Pattern (\textcolor{green}{Extra})}
+The \texttt{PlayerState} interface defines a flexible structure for managing different "player states." The concrete implementations of this interface are \texttt{JetpackState}, \texttt{SpringState}, and \texttt{SuctionState}. This design allows the player's behavior to change dynamically without modifying the \texttt{Player} class itself. Bonuses and obstacles that trigger a state change (e.g., upon collision) create a new state as a unique pointer and transfer it to the player using \texttt{std::move} semantics.
+
+\section*{Additional Features}
+\begin{itemize}
+    \item \textbf{Start Screen:} A playful entry point where the game starts upon pressing \textbf{Space}.
+    \item \textbf{Game Over Screen:} Displays the current score and high score, saved in \texttt{HighScore.txt}.
+    \item \textbf{Black Hole Obstacle:} Adds lateral forces, increasing game difficulty without killing the player.
+\end{itemize}
+
+The State Pattern makes it easy to add new entities with unique behaviors, such as bonuses or obstacles, without altering existing code.
+
+\begin{figure}[htbp]
+    \centering
+    % Eerste rij
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{state_pattern1.png}
+        \caption{PlayerState hierarchy}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{state_pattern2.png}
+        \caption{PlayerState pointer in Player class}
+    \end{subfigure}
+
+    \vspace{0.5cm} % Ruimte tussen rijen
+    % Tweede rij
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{state_pattern3.png}
+        \caption{PlayerState interface}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{black_hole.png}
+        \caption{Black Hole example}
+    \end{subfigure}
+    \caption{Extra clarifying images}
+\end{figure}
+
+
+\end{document}
+
+
+
