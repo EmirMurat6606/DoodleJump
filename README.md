@@ -79,3 +79,75 @@ git clone https://github.com/EmirMurat6606/DoodleJump.git
 cd DoodleJump
 ```
 
+### ✅ SFML Installation
+
+Before building the project, you need to install the SFML library. SFML (Simple and Fast Multimedia Library) is used for the graphical representation and input handling in this game.
+
+#### 1. **Windows**:
+
+To install SFML on Windows, follow these steps:
+
+1. **Download SFML**:  
+   Go to the official SFML download page: [SFML Downloads](https://www.sfml-dev.org/download.php).
+
+2. **Extract SFML**:  
+   Download the **"Visual C++"** version (the version matching your compiler). Extract the contents of the zip file to a folder.
+
+3. **Set up SFML in Visual Studio**:
+  - Open your project in **Visual Studio**.
+  - Go to `Project` → `Properties`.
+  - Under `Configuration Properties`, navigate to `VC++ Directories`.
+  - Add the path to the **"include"** directory from the extracted SFML folder to `Include Directories`.
+  - Similarly, add the path to the **"lib"** directory from the extracted SFML folder to `Library Directories`.
+
+  - Under `Configuration Properties`, navigate to `Linker` → `Input` → `Additional Dependencies`, and add the following libraries:
+    - `sfml-graphics-d.lib`
+    - `sfml-window-d.lib`
+    - `sfml-system-d.lib`
+
+  - Copy the required **DLLs** from the SFML `bin` folder (e.g., `sfml-graphics-d-2.dll`, `sfml-window-d-2.dll`, `sfml-system-d-2.dll`) into your executable directory or ensure they are in your system’s `PATH`.
+
+4. **Build and run** the project.
+
+---
+
+#### 2. **macOS**:
+
+On macOS, you can easily install SFML using **Homebrew**:
+
+1. **Install Homebrew** (if you don't have it yet):
+  - Open a terminal and run the following command:
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    ```
+
+2. **Install SFML**:
+  - Once Homebrew is installed, you can install SFML with the following command:
+    ```bash
+    brew install sfml
+    ```
+
+3. **Link SFML to your project**:
+  - You may need to tell your CMake build to link against SFML. Add the following to your `CMakeLists.txt`:
+    ```cmake
+    find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+    target_link_libraries(your_target sfml-graphics sfml-window sfml-system)
+    ```
+
+4. **Build and run** the project using CMake.
+
+---
+
+#### 3. **Linux (Ubuntu/Debian)**:
+
+For Linux (Ubuntu/Debian), SFML can be installed via the package manager.
+
+1. **Install SFML**:
+   Open a terminal and run the following command:
+   ```bash
+   sudo apt-get install libsfml-dev
+   ```
+
+
+  
+
