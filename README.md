@@ -28,7 +28,7 @@ The game features:
     - Temporary/Breakable (White)
 - **Extra obstacle**:
     - A player can be attracted by Black Holes when getting higher
-    - These Black Holes don't kill the player, but slows down the player in te direction it is moving.
+    - These Black Holes don't kill the player, but slow down the player in the direction it is moving.
 
 If the player falls below the screen with no platform to land on, the game ends.
 
